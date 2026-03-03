@@ -1,0 +1,269 @@
+{
+  "info": {
+    "name": "LearnHub API",
+    "description": "Complete Postman collection for the LearnHub REST API — Phases 3, 4 & 5",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "userId", "value": "REPLACE_WITH_USER_ID" },
+    { "key": "courseId", "value": "REPLACE_WITH_COURSE_ID" },
+    { "key": "enrollmentId", "value": "REPLACE_WITH_ENROLLMENT_ID" },
+    { "key": "lessonId", "value": "REPLACE_WITH_LESSON_ID" }
+  ],
+  "item": [
+    {
+      "name": "Health & Utils",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/health"
+          }
+        },
+        {
+          "name": "Global Statistics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/stats"
+          }
+        },
+        {
+          "name": "Search (regex)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/search?q=javascript&in=courses,lessons",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search"],
+              "query": [
+                { "key": "q", "value": "javascript" },
+                { "key": "in", "value": "courses,lessons" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Users (JSON)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/export/users" }
+        },
+        {
+          "name": "Export Courses (JSON)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/export/courses" }
+        },
+        {
+          "name": "Export Lessons (JSON)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/export/lessons" }
+        },
+        {
+          "name": "Export Enrollments (JSON)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/export/enrollments" }
+        },
+        {
+          "name": "Export Reviews (JSON)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/export/reviews" }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create User (insertOne)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@test.com\",\n  \"role\": \"student\",\n  \"profile\": { \"bio\": \"New student\", \"city\": \"New York\", \"country\": \"USA\" },\n  \"skills\": [\"JavaScript\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Get User by ID (findOne)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Update User — $set",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}?op=set",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"],
+              "query": [{ "key": "op", "value": "set" }]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"profile.city\": \"San Francisco\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update User — $push skill",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}?op=push",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"],
+              "query": [{ "key": "op", "value": "push" }]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"skills\": \"Python\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update User — $pull skill",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}?op=pull",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"],
+              "query": [{ "key": "op", "value": "pull" }]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"skills\": \"Python\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update User — $inc",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}?op=inc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"],
+              "query": [{ "key": "op", "value": "inc" }]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"totalCoursesEnrolled\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Upsert User Profile",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/users/{{userId}}/profile",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@test.com\",\n  \"role\": \"student\",\n  \"profile\": { \"bio\": \"Updated bio\", \"city\": \"Boston\" },\n  \"skills\": [\"JavaScript\", \"MongoDB\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "User Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/{{userId}}/dashboard"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "Insert Many Courses (insertMany)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/courses/bulk",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"title\": \"Test Course 1\",\n    \"description\": \"A test course\",\n    \"category\": \"Web\",\n    \"difficulty\": \"beginner\",\n    \"price\": 29.99,\n    \"tags\": [\"test\"]\n  },\n  {\n    \"title\": \"Test Course 2\",\n    \"description\": \"Another test course\",\n    \"category\": \"AI\",\n    \"difficulty\": \"advanced\",\n    \"price\": 59.99,\n    \"tags\": [\"test\", \"ai\"]\n  }\n]"
+            }
+          }
+        },
+        {
+          "name": "List Courses (filter + sort + pagination)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/courses?category=Web&sort=price&order=asc&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "courses"],
+              "query": [
+                { "key": "category", "value": "Web" },
+                { "key": "sort", "value": "price" },
+                { "key": "order", "value": "asc" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Course (cascade)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/courses/{{courseId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Enrollments",
+      "item": [
+        {
+          "name": "Enroll User (business logic)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/enrollments",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"courseId\": \"{{courseId}}\",\n  \"payment\": {\n    \"amount\": 49.99,\n    \"method\": \"card\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Mark Lesson Completed (progress)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/enrollments/{{enrollmentId}}/progress",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lessonId\": \"{{lessonId}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Leave a Review (business logic)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reviews",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"courseId\": \"{{courseId}}\",\n  \"rating\": 5,\n  \"title\": \"Amazing course!\",\n  \"comment\": \"Very well explained, highly recommended.\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LearnHub — User Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="logo"><span>&#x1F393;</span> LearnHub</a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search courses..." />
+      <button onclick="window.location.href='/?q='+document.getElementById('searchInput').value">&#x1F50D;</button>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/">Catalog</a></li>
+      <li><a href="/dashboard.html" class="active">Dashboard</a></li>
+      <li><a href="/stats.html">Stats</a></li>
+    </ul>
+  </nav>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>&#x1F4CA; User Dashboard</h1>
+      <p>Track your learning progress</p>
+    </div>
+
+    <!-- User selector -->
+    <div class="user-selector">
+      <label>&#x1F464; Select User:</label>
+      <select id="userSelect" onchange="loadDashboard()"></select>
+    </div>
+
+    <div id="dashboardContent">
+      <div class="empty-state">
+        <div class="icon">&#x1F446;</div>
+        <p>Select a user above to view their dashboard</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    async function init() {
+      await loadUsersIntoSelect('userSelect');
+      const select = document.getElementById('userSelect');
+      const emptyOpt = document.createElement('option');
+      emptyOpt.value = '';
+      emptyOpt.textContent = '— Choose a user —';
+      select.insertBefore(emptyOpt, select.firstChild);
+      select.value = '';
+    }
+
+    async function loadDashboard() {
+      const userId = document.getElementById('userSelect').value;
+      const container = document.getElementById('dashboardContent');
+      if (!userId) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">&#x1F446;</div><p>Select a user above to view their dashboard</p></div>';
+        return;
+      }
+
+      container.innerHTML = '<div class="spinner"></div>';
+
+      try {
+        const data = await api(`/api/users/${userId}/dashboard`);
+        const user = data.user;
+        const enrollments = data.activeEnrollments.data;
+        const reviews = data.recentReviews.data;
+
+        container.innerHTML = `
+          <!-- User stats -->
+          <div class="stat-cards">
+            <div class="stat-card">
+              <div class="stat-value">${user.totalCoursesEnrolled || 0}</div>
+              <div class="stat-label">Courses Enrolled</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${data.activeEnrollments.count}</div>
+              <div class="stat-label">Active Courses</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${data.recentReviews.count}</div>
+              <div class="stat-label">Reviews Written</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${user.isActive ? '&#x2705;' : '&#x274C;'}</div>
+              <div class="stat-label">Account Status</div>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <!-- User profile -->
+            <div class="panel">
+              <h2>&#x1F464; Profile</h2>
+              <div style="padding:.5rem 0">
+                <p><strong>${esc(user.firstName)} ${esc(user.lastName)}</strong></p>
+                <p style="color:var(--text-muted);font-size:.85rem">${esc(user.email)}</p>
+                <p style="color:var(--text-muted);font-size:.85rem;margin-top:.5rem">Role: ${user.role}</p>
+                ${user.profile?.bio ? `<p style="margin-top:.75rem;font-size:.85rem">${esc(user.profile.bio)}</p>` : ''}
+                ${user.profile?.city ? `<p style="font-size:.85rem;color:var(--text-muted)">&#x1F4CD; ${esc(user.profile.city)}, ${esc(user.profile.country || '')}</p>` : ''}
+                <p style="font-size:.75rem;color:var(--text-muted);margin-top:.75rem">Last login: ${user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'N/A'}</p>
+              </div>
+            </div>
+
+            <!-- Recent reviews -->
+            <div class="panel">
+              <h2>&#x2B50; Recent Reviews</h2>
+              ${reviews.length === 0
+                ? '<div class="empty-state" style="padding:1rem"><p>No reviews yet</p></div>'
+                : reviews.map(r => `
+                  <div class="review-item">
+                    <div class="review-header">
+                      <h4>${esc(r.courseTitle)}</h4>
+                      <span class="stars">${renderStars(r.rating)}</span>
+                    </div>
+                    <p>${esc(r.title || '')}</p>
+                    <small style="color:var(--text-muted);font-size:.75rem">${new Date(r.createdAt).toLocaleDateString()}</small>
+                  </div>
+                `).join('')
+              }
+            </div>
+
+            <!-- Active enrollments -->
+            <div class="panel panel-full">
+              <h2>&#x1F4DA; Active Enrollments (${enrollments.length})</h2>
+              ${enrollments.length === 0
+                ? '<div class="empty-state" style="padding:1rem"><p>No active enrollments</p></div>'
+                : enrollments.map(e => `
+                  <div class="enrollment-item">
+                    <div class="enr-info">
+                      <h4><a href="/course.html?id=${e.courseId}" style="color:var(--text);text-decoration:none">${esc(e.courseTitle)}</a></h4>
+                      <p>${e.courseCategory || ''} &middot; ${e.courseDifficulty || ''} &middot; Enrolled ${new Date(e.enrolledAt).toLocaleDateString()}</p>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:1rem">
+                      <span style="font-size:.85rem;font-weight:600;color:var(--primary)">${e.progress?.percentage || 0}%</span>
+                      <div class="progress-bar-container">
+                        <div class="progress-bar-fill ${e.progress?.percentage >= 100 ? 'complete' : ''}" style="width:${e.progress?.percentage || 0}%"></div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')
+              }
+            </div>
+          </div>
+        `;
+      } catch(err) {
+        container.innerHTML = `<div class="empty-state"><p>Error: ${esc(err.message)}</p></div>`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

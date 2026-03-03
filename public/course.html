@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LearnHub — Course Detail</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="logo"><span>&#x1F393;</span> LearnHub</a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search courses..." />
+      <button onclick="window.location.href='/?q='+document.getElementById('searchInput').value">&#x1F50D;</button>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/">Catalog</a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/stats.html">Stats</a></li>
+    </ul>
+  </nav>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="container">
+    <div id="courseContent"><div class="spinner"></div></div>
+  </div>
+
+  <!-- Enroll Modal -->
+  <div class="modal-overlay" id="enrollModal">
+    <div class="modal">
+      <h2>Enroll in this Course</h2>
+      <form id="enrollForm" onsubmit="submitEnrollment(event)">
+        <input type="hidden" id="enrollCourseId" />
+        <div class="form-group">
+          <label>Select User</label>
+          <select id="enrollUserId" required></select>
+        </div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="enrollPayment">
+            <option value="card">Credit Card</option>
+            <option value="paypal">PayPal</option>
+            <option value="free">Free</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('enrollModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Enroll Now</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Review Modal -->
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal">
+      <h2>Write a Review</h2>
+      <form id="reviewForm" onsubmit="submitReview(event)">
+        <input type="hidden" id="reviewCourseId" />
+        <div class="form-group">
+          <label>Select User</label>
+          <select id="reviewUserId" required></select>
+        </div>
+        <div class="form-group">
+          <label>Rating</label>
+          <select id="reviewRating" required>
+            <option value="5">&#x2B50; 5 — Excellent</option>
+            <option value="4">&#x2B50; 4 — Very Good</option>
+            <option value="3">&#x2B50; 3 — Good</option>
+            <option value="2">&#x2B50; 2 — Fair</option>
+            <option value="1">&#x2B50; 1 — Poor</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="reviewTitle" placeholder="Summary of your review" required />
+        </div>
+        <div class="form-group">
+          <label>Comment</label>
+          <textarea id="reviewComment" placeholder="Share your experience..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('reviewModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    const courseId = new URLSearchParams(window.location.search).get('id');
+
+    async function loadCourse() {
+      if (!courseId) { document.getElementById('courseContent').innerHTML = '<div class="empty-state"><p>No course ID provided</p></div>'; return; }
+
+      try {
+        // Fetch course
+        const course = await api(`/api/courses?limit=100`);
+        const c = course.data.find(x => x._id === courseId);
+        if (!c) { document.getElementById('courseContent').innerHTML = '<div class="empty-state"><p>Course not found</p></div>'; return; }
+
+        document.title = `LearnHub — ${c.title}`;
+
+        // Fetch lessons for this course
+        const searchRes = await api(`/api/search?q=.&in=lessons`);
+        const allLessons = searchRes.results.lessons || [];
+        const lessons = allLessons.filter(l => l.courseId === courseId).sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        document.getElementById('courseContent').innerHTML = `
+          <button class="btn btn-secondary btn-sm" onclick="window.location.href='/'">&#x25C0; Back to Catalog</button>
+          <br><br>
+          <div class="course-detail">
+            <div class="course-main">
+              <div class="badge-row" style="margin-bottom:.75rem">
+                <span class="badge badge-category">${c.category}</span>
+                <span class="badge badge-${c.difficulty}">${c.difficulty}</span>
+                ${c.isPublished ? '' : '<span class="badge" style="background:#fee2e2;color:#dc2626">Draft</span>'}
+              </div>
+              <h1>${esc(c.title)}</h1>
+              <p class="description">${esc(c.description || '')}</p>
+
+              <div class="course-meta-row">
+                <div class="course-meta-item">${renderStars(c.rating?.average || 0)} <strong>${(c.rating?.average || 0).toFixed(1)}</strong> (${c.rating?.count || 0} reviews)</div>
+                <div class="course-meta-item">&#x1F465; <strong>${c.enrollmentCount || 0}</strong> enrolled</div>
+                <div class="course-meta-item">&#x1F4DA; <strong>${c.metadata?.totalLessons || lessons.length}</strong> lessons</div>
+                <div class="course-meta-item">&#x23F1;&#xFE0F; <strong>${c.metadata?.duration ? Math.round(c.metadata.duration / 60) + 'h' : 'N/A'}</strong></div>
+              </div>
+
+              <!-- Lessons -->
+              <div class="lessons-section">
+                <h2>&#x1F4D6; Course Lessons (${lessons.length})</h2>
+                ${lessons.length === 0
+                  ? '<div class="empty-state"><p>No lessons available yet</p></div>'
+                  : lessons.map((l, i) => `
+                    <div class="lesson-item">
+                      <div class="lesson-order">${l.order || i + 1}</div>
+                      <div class="lesson-info">
+                        <h4>${esc(l.title)}</h4>
+                        <p>${esc((l.content || '').substring(0, 100))}${(l.content || '').length > 100 ? '...' : ''}</p>
+                      </div>
+                      <div class="lesson-meta">
+                        <span>${l.type || 'video'}</span>
+                        <span>${l.duration || 0} min</span>
+                      </div>
+                    </div>
+                  `).join('')
+                }
+              </div>
+
+              <!-- Reviews section -->
+              <div class="reviews-section" style="margin-top:2rem">
+                <h2>&#x2B50; Reviews</h2>
+                <div id="reviewsList"><div class="spinner"></div></div>
+              </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+              <div class="sidebar-card">
+                <div class="price-big">$${(c.price || 0).toFixed(2)}</div>
+                <button class="btn btn-primary" onclick="openEnrollForCourse()">&#x1F4DD; Enroll Now</button>
+                <button class="btn btn-secondary" onclick="openReviewForCourse()">&#x270D;&#xFE0F; Write a Review</button>
+                <ul class="info-list">
+                  <li><span>Category</span> <strong>${c.category}</strong></li>
+                  <li><span>Difficulty</span> <strong>${c.difficulty}</strong></li>
+                  <li><span>Language</span> <strong>${c.metadata?.language || 'en'}</strong></li>
+                  <li><span>Lessons</span> <strong>${c.metadata?.totalLessons || lessons.length}</strong></li>
+                  <li><span>Tags</span> <strong>${(c.tags || []).join(', ')}</strong></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        `;
+
+        loadReviews();
+      } catch (err) {
+        document.getElementById('courseContent').innerHTML = `<div class="empty-state"><p>Error: ${esc(err.message)}</p></div>`;
+      }
+    }
+
+    async function loadReviews() {
+      try {
+        const searchRes = await api(`/api/search?q=.&in=courses`);
+        // Get reviews from export endpoint
+        const res = await fetch(`/api/export/reviews`);
+        const data = await res.json();
+        const reviews = (data.data || []).filter(r => r.courseId === courseId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const container = document.getElementById('reviewsList');
+        if (reviews.length === 0) {
+          container.innerHTML = '<div class="empty-state"><p>No reviews yet. Be the first!</p></div>';
+          return;
+        }
+
+        container.innerHTML = reviews.map(r => `
+          <div class="review-item">
+            <div class="review-header">
+              <h4>${esc(r.title || 'No title')}</h4>
+              <span class="stars">${renderStars(r.rating)}</span>
+            </div>
+            <p>${esc(r.comment || '')}</p>
+            <small style="color:var(--text-muted);font-size:.75rem">${new Date(r.createdAt).toLocaleDateString()} ${r.isVerified ? '&#x2705; Verified' : ''}</small>
+          </div>
+        `).join('');
+      } catch(e) {
+        document.getElementById('reviewsList').innerHTML = '<div class="empty-state"><p>Could not load reviews</p></div>';
+      }
+    }
+
+    function openEnrollForCourse() {
+      document.getElementById('enrollCourseId').value = courseId;
+      loadUsersIntoSelect('enrollUserId');
+      openModal('enrollModal');
+    }
+
+    function openReviewForCourse() {
+      document.getElementById('reviewCourseId').value = courseId;
+      loadUsersIntoSelect('reviewUserId');
+      openModal('reviewModal');
+    }
+
+    async function submitEnrollment(e) {
+      e.preventDefault();
+      try {
+        await api('/api/enrollments', 'POST', {
+          userId: document.getElementById('enrollUserId').value,
+          courseId: document.getElementById('enrollCourseId').value,
+          payment: { method: document.getElementById('enrollPayment').value }
+        });
+        toast('Enrollment successful!', 'success');
+        closeModal('enrollModal');
+        loadCourse();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function submitReview(e) {
+      e.preventDefault();
+      try {
+        await api('/api/reviews', 'POST', {
+          userId: document.getElementById('reviewUserId').value,
+          courseId: document.getElementById('reviewCourseId').value,
+          rating: parseInt(document.getElementById('reviewRating').value),
+          title: document.getElementById('reviewTitle').value,
+          comment: document.getElementById('reviewComment').value
+        });
+        toast('Review submitted!', 'success');
+        closeModal('reviewModal');
+        loadCourse();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    loadCourse();
+  </script>
+</body>
+</html>

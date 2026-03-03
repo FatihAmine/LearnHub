@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LearnHub — Course Catalog</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="logo"><span>&#x1F393;</span> LearnHub</a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search courses..." />
+      <button onclick="doSearch()">&#x1F50D;</button>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/" class="active">Catalog</a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/stats.html">Stats</a></li>
+    </ul>
+  </nav>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Main content -->
+  <div class="container">
+    <div class="page-header">
+      <h1>Course Catalog</h1>
+      <p>Browse our courses and find your next learning adventure</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+      <select id="filterCategory">
+        <option value="">All Categories</option>
+      </select>
+      <select id="filterDifficulty">
+        <option value="">All Levels</option>
+        <option value="beginner">Beginner</option>
+        <option value="intermediate">Intermediate</option>
+        <option value="advanced">Advanced</option>
+      </select>
+      <select id="filterSort">
+        <option value="">Sort by</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+        <option value="rating.average-desc">Rating: High to Low</option>
+        <option value="enrollmentCount-desc">Most Popular</option>
+        <option value="createdAt-desc">Newest First</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" onclick="resetFilters()">Reset</button>
+    </div>
+
+    <!-- Course cards -->
+    <div class="cards-grid" id="coursesGrid"></div>
+
+    <!-- Pagination -->
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- Enroll Modal -->
+  <div class="modal-overlay" id="enrollModal">
+    <div class="modal">
+      <h2>Enroll in Course</h2>
+      <form id="enrollForm" onsubmit="submitEnrollment(event)">
+        <input type="hidden" id="enrollCourseId" />
+        <div class="form-group">
+          <label>Select User</label>
+          <select id="enrollUserId" required></select>
+        </div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="enrollPayment">
+            <option value="card">Credit Card</option>
+            <option value="paypal">PayPal</option>
+            <option value="free">Free</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('enrollModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Enroll</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    let currentPage = 1;
+    const LIMIT = 9;
+
+    async function loadCourses() {
+      const category = document.getElementById('filterCategory').value;
+      const difficulty = document.getElementById('filterDifficulty').value;
+      const sortVal = document.getElementById('filterSort').value;
+
+      let url = `/api/courses?page=${currentPage}&limit=${LIMIT}`;
+      if (category) url += `&category=${encodeURIComponent(category)}`;
+      if (difficulty) url += `&difficulty=${encodeURIComponent(difficulty)}`;
+      if (sortVal) {
+        const [field, order] = sortVal.split('-');
+        url += `&sort=${field}&order=${order}`;
+      }
+
+      const grid = document.getElementById('coursesGrid');
+      grid.innerHTML = '<div class="spinner"></div>';
+
+      try {
+        const res = await api(url);
+        if (res.data.length === 0) {
+          grid.innerHTML = '<div class="empty-state"><div class="icon">&#x1F4DA;</div><p>No courses found</p></div>';
+          document.getElementById('pagination').innerHTML = '';
+          return;
+        }
+
+        grid.innerHTML = res.data.map(course => `
+          <div class="card" onclick="window.location.href='/course.html?id=${course._id}'">
+            <div class="card-header">
+              <div class="badge-row">
+                <span class="badge badge-category">${course.category || 'General'}</span>
+                <span class="badge badge-${course.difficulty || 'beginner'}">${course.difficulty || 'beginner'}</span>
+              </div>
+              <h3>${esc(course.title)}</h3>
+            </div>
+            <div class="card-body">
+              <p>${esc(course.description || '')}</p>
+            </div>
+            <div class="card-footer">
+              <span class="price">$${(course.price || 0).toFixed(2)}</span>
+              <div class="meta">
+                <span>${renderStars(course.rating?.average || 0)} ${(course.rating?.average || 0).toFixed(1)}</span>
+                <span>&#x1F465; ${course.enrollmentCount || 0}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        renderPagination(res.pagination);
+      } catch (err) {
+        grid.innerHTML = '<div class="empty-state"><p>Error loading courses</p></div>';
+      }
+    }
+
+    function renderPagination(p) {
+      const container = document.getElementById('pagination');
+      if (p.totalPages <= 1) { container.innerHTML = ''; return; }
+      let html = `<button ${p.page <= 1 ? 'disabled' : ''} onclick="goPage(${p.page - 1})">&#x25C0; Prev</button>`;
+      for (let i = 1; i <= p.totalPages; i++) {
+        html += `<button class="${i === p.page ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+      }
+      html += `<button ${p.page >= p.totalPages ? 'disabled' : ''} onclick="goPage(${p.page + 1})">Next &#x25B6;</button>`;
+      html += `<span class="page-info">${p.total} courses</span>`;
+      container.innerHTML = html;
+    }
+
+    function goPage(p) { currentPage = p; loadCourses(); }
+    function resetFilters() {
+      document.getElementById('filterCategory').value = '';
+      document.getElementById('filterDifficulty').value = '';
+      document.getElementById('filterSort').value = '';
+      currentPage = 1;
+      loadCourses();
+    }
+
+    // Populate categories from data
+    async function loadCategories() {
+      try {
+        const res = await api('/api/stats');
+        const select = document.getElementById('filterCategory');
+        res.categoryBreakdown.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.category;
+          opt.textContent = `${c.category} (${c.count})`;
+          select.appendChild(opt);
+        });
+      } catch(e) {}
+    }
+
+    function openEnrollModal(courseId) {
+      event.stopPropagation();
+      document.getElementById('enrollCourseId').value = courseId;
+      loadUsersIntoSelect('enrollUserId');
+      openModal('enrollModal');
+    }
+
+    async function submitEnrollment(e) {
+      e.preventDefault();
+      const data = {
+        userId: document.getElementById('enrollUserId').value,
+        courseId: document.getElementById('enrollCourseId').value,
+        payment: { method: document.getElementById('enrollPayment').value }
+      };
+      try {
+        await api('/api/enrollments', 'POST', data);
+        toast('Enrollment successful!', 'success');
+        closeModal('enrollModal');
+        loadCourses();
+      } catch(err) {
+        toast(err.message, 'error');
+      }
+    }
+
+    async function doSearch() {
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) return loadCourses();
+      const grid = document.getElementById('coursesGrid');
+      grid.innerHTML = '<div class="spinner"></div>';
+      try {
+        const res = await api(`/api/search?q=${encodeURIComponent(q)}&in=courses`);
+        if (!res.results.courses || res.results.courses.length === 0) {
+          grid.innerHTML = '<div class="empty-state"><div class="icon">&#x1F50D;</div><p>No results found</p></div>';
+          document.getElementById('pagination').innerHTML = '';
+          return;
+        }
+        grid.innerHTML = res.results.courses.map(course => `
+          <div class="card" onclick="window.location.href='/course.html?id=${course._id}'">
+            <div class="card-header">
+              <div class="badge-row">
+                <span class="badge badge-category">${course.category || 'General'}</span>
+                <span class="badge badge-${course.difficulty || 'beginner'}">${course.difficulty || 'beginner'}</span>
+              </div>
+              <h3>${esc(course.title)}</h3>
+            </div>
+            <div class="card-body"><p>${esc(course.description || '')}</p></div>
+            <div class="card-footer">
+              <span class="price">$${(course.price || 0).toFixed(2)}</span>
+              <div class="meta"><span>${renderStars(course.rating?.average || 0)} ${(course.rating?.average || 0).toFixed(1)}</span></div>
+            </div>
+          </div>
+        `).join('');
+        document.getElementById('pagination').innerHTML = `<span class="page-info">${res.totalResults} results for "${esc(q)}"</span>`;
+      } catch(err) {
+        grid.innerHTML = '<div class="empty-state"><p>Search error</p></div>';
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    document.getElementById('filterCategory').addEventListener('change', () => { currentPage = 1; loadCourses(); });
+    document.getElementById('filterDifficulty').addEventListener('change', () => { currentPage = 1; loadCourses(); });
+    document.getElementById('filterSort').addEventListener('change', () => { currentPage = 1; loadCourses(); });
+
+    loadCategories();
+    loadCourses();
+  </script>
+</body>
+</html>

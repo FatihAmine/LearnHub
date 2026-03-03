@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LearnHub — Statistics</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .bar-chart { display: flex; flex-direction: column; gap: .5rem; }
+    .bar-row { display: flex; align-items: center; gap: .75rem; }
+    .bar-label { width: 120px; font-size: .85rem; font-weight: 500; text-align: right; }
+    .bar-track { flex: 1; height: 28px; background: var(--surface-alt); border-radius: 6px; overflow: hidden; position: relative; }
+    .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: .75rem; font-size: .75rem; font-weight: 600; color: #fff; transition: width .5s; }
+    .bar-fill.cat { background: var(--primary); }
+    .bar-fill.diff { background: var(--secondary); }
+    .export-section { margin-top: 2rem; }
+    .export-buttons { display: flex; gap: .75rem; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="/" class="logo"><span>&#x1F393;</span> LearnHub</a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search courses..." />
+      <button onclick="window.location.href='/?q='+document.getElementById('searchInput').value">&#x1F50D;</button>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/">Catalog</a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/stats.html" class="active">Stats</a></li>
+    </ul>
+  </nav>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>&#x1F4C8; Platform Statistics</h1>
+      <p>Global overview of the LearnHub platform</p>
+    </div>
+
+    <div id="statsContent"><div class="spinner"></div></div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    async function loadStats() {
+      try {
+        const stats = await api('/api/stats');
+        const o = stats.overview;
+        const maxCat = Math.max(...stats.categoryBreakdown.map(c => c.count));
+        const maxDiff = Math.max(...stats.difficultyBreakdown.map(d => d.count));
+
+        document.getElementById('statsContent').innerHTML = `
+          <!-- Overview cards -->
+          <div class="stat-cards">
+            <div class="stat-card">
+              <div class="stat-value">${o.totalUsers}</div>
+              <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${o.totalCourses}</div>
+              <div class="stat-label">Total Courses</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${o.totalEnrollments}</div>
+              <div class="stat-label">Total Enrollments</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${o.totalReviews}</div>
+              <div class="stat-label">Total Reviews</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${o.publishedCourses}</div>
+              <div class="stat-label">Published Courses</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${o.activeEnrollments}</div>
+              <div class="stat-label">Active Enrollments</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${o.completedEnrollments}</div>
+              <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">&#x2B50; ${o.averageRating}</div>
+              <div class="stat-label">Average Rating</div>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <!-- Category breakdown -->
+            <div class="panel">
+              <h2>&#x1F4CA; Courses by Category</h2>
+              <div class="bar-chart">
+                ${stats.categoryBreakdown.map(c => `
+                  <div class="bar-row">
+                    <div class="bar-label">${c.category}</div>
+                    <div class="bar-track">
+                      <div class="bar-fill cat" style="width:${(c.count / maxCat * 100)}%">${c.count}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Difficulty breakdown -->
+            <div class="panel">
+              <h2>&#x1F3AF; Courses by Difficulty</h2>
+              <div class="bar-chart">
+                ${stats.difficultyBreakdown.map(d => `
+                  <div class="bar-row">
+                    <div class="bar-label">${d.difficulty}</div>
+                    <div class="bar-track">
+                      <div class="bar-fill diff" style="width:${(d.count / maxDiff * 100)}%">${d.count}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Top courses -->
+            <div class="panel panel-full">
+              <h2>&#x1F3C6; Top Rated Courses</h2>
+              ${stats.topCourses.map((c, i) => `
+                <div class="enrollment-item">
+                  <div class="enr-info">
+                    <h4>${i + 1}. ${esc(c.title)}</h4>
+                    <p>${c.category} &middot; &#x1F465; ${c.enrollmentCount} enrolled</p>
+                  </div>
+                  <div style="font-size:.9rem;font-weight:600">
+                    ${renderStars(c.rating?.average || 0)} ${(c.rating?.average || 0).toFixed(1)}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <!-- Export section -->
+            <div class="panel panel-full export-section">
+              <h2>&#x1F4E5; Export Data</h2>
+              <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:1rem">Download collection data as JSON files</p>
+              <div class="export-buttons">
+                <a href="/api/export/users" class="btn btn-primary btn-sm" download>&#x1F464; Users</a>
+                <a href="/api/export/courses" class="btn btn-primary btn-sm" download>&#x1F4DA; Courses</a>
+                <a href="/api/export/lessons" class="btn btn-primary btn-sm" download>&#x1F4D6; Lessons</a>
+                <a href="/api/export/enrollments" class="btn btn-primary btn-sm" download>&#x1F4DD; Enrollments</a>
+                <a href="/api/export/reviews" class="btn btn-primary btn-sm" download>&#x2B50; Reviews</a>
+              </div>
+            </div>
+          </div>
+        `;
+      } catch(err) {
+        document.getElementById('statsContent').innerHTML = `<div class="empty-state"><p>Error: ${esc(err.message)}</p></div>`;
+      }
+    }
+
+    loadStats();
+  </script>
+</body>
+</html>
