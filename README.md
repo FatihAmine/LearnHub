@@ -1,10 +1,10 @@
-# 🎓 LearnHub
+#  LearnHub
 
 A full-stack online learning platform built with **Node.js**, **Express**, and **MongoDB**. LearnHub provides a REST API and a responsive web frontend for managing courses, users, enrollments, and reviews.
 
 ---
 
-## 📸 Overview
+##  Overview
 
 LearnHub is an educational platform where students can browse courses, enroll, track progress, leave reviews, and view personalized dashboards — all powered by a MongoDB-backed API.
 
@@ -23,32 +23,32 @@ LearnHub is an educational platform where students can browse courses, enroll, t
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 learnhub-project/
-├── server.js                  # Express server & MongoDB connection
-├── package.json               # Dependencies & project metadata
-├── seed.mongosh.js            # Database seed script (mongosh)
-├── learnhub.postman_collection.json  # Postman API collection
+├── server.js                  
+├── package.json             
+├── seed.mongosh.js         
+├── learnhub.postman_collection.json  
 ├── routes/
-│   ├── users.js               # User CRUD & dashboard
-│   ├── courses.js             # Course listing, bulk insert & cascade delete
-│   ├── enrollments.js         # Enrollment & lesson progress
-│   ├── reviews.js             # Reviews with rating recalculation
-│   └── extra.js               # Search, stats & data export
+│   ├── users.js               
+│   ├── courses.js            
+│   ├── enrollments.js        
+│   ├── reviews.js             
+│   └── extra.js             
 └── public/
-    ├── index.html             # Course catalog page
-    ├── dashboard.html         # User dashboard page
-    ├── course.html            # Single course detail page
-    ├── stats.html             # Global statistics page
-    ├── css/style.css          # All styles (responsive)
-    └── js/app.js              # Frontend API helpers & UI logic
+    ├── index.html            
+    ├── dashboard.html        
+    ├── course.html            
+    ├── stats.html            
+    ├── css/style.css          
+    └── js/app.js              
 ```
 
 ---
 
-## ⚙️ Prerequisites
+##  Prerequisites
 
 Before running the project, make sure you have installed:
 
@@ -59,7 +59,7 @@ Before running the project, make sure you have installed:
 
 ---
 
-## 🚀 How to Run the Project
+##  How to Run the Project
 
 ### 1. Clone the repository
 
@@ -114,7 +114,7 @@ Visit: [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 📡 API Endpoints
+##  API Endpoints
 
 Base URL: `http://localhost:3000`
 
@@ -167,7 +167,7 @@ Base URL: `http://localhost:3000`
 
 ---
 
-## 🧪 Testing with Postman
+##  Testing with Postman
 
 1. Open **Postman**
 2. Click **File → Import**
@@ -183,7 +183,7 @@ Base URL: `http://localhost:3000`
 
 ---
 
-## 🔑 Key MongoDB Operations Demonstrated
+##  Key MongoDB Operations Demonstrated
 
 | Operation                        | Where Used                              |
 |----------------------------------|-----------------------------------------|
@@ -201,8 +201,3 @@ Base URL: `http://localhost:3000`
 | Aggregation pipeline             | User dashboard & stats                  |
 | Upsert                           | User profile upsert                     |
 
----
-
-## 📄 License
-
-This project is licensed under the ISC License.
