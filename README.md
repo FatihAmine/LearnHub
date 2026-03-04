@@ -10,7 +10,7 @@ LearnHub is an educational platform where students can browse courses, enroll, t
 
 ---
 
-## 🛠️ Technologies Used
+##  Technologies Used
 
 | Layer        | Technology                                                    |
 |-------------|---------------------------------------------------------------|
