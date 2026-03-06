@@ -21,10 +21,10 @@
 <body>
 
   <nav class="navbar">
-    <a href="/" class="logo"><span>&#x1F393;</span> LearnHub</a>
+    <a href="/" class="logo"><span></span> LearnHub</a>
     <div class="search-bar">
       <input type="text" id="searchInput" placeholder="Search courses..." />
-      <button onclick="window.location.href='/?q='+document.getElementById('searchInput').value">&#x1F50D;</button>
+     
     </div>
     <ul class="nav-links">
       <li><a href="/">Catalog</a></li>
@@ -37,7 +37,7 @@
 
   <div class="container">
     <div class="page-header">
-      <h1>&#x1F4C8; Platform Statistics</h1>
+      <h1>Platform Statistics</h1>
       <p>Global overview of the LearnHub platform</p>
     </div>
 
@@ -93,7 +93,7 @@
           <div class="dashboard-grid">
             <!-- Category breakdown -->
             <div class="panel">
-              <h2>&#x1F4CA; Courses by Category</h2>
+              <h2> Courses by Category</h2>
               <div class="bar-chart">
                 ${stats.categoryBreakdown.map(c => `
                   <div class="bar-row">
@@ -108,7 +108,7 @@
 
             <!-- Difficulty breakdown -->
             <div class="panel">
-              <h2>&#x1F3AF; Courses by Difficulty</h2>
+              <h2> Courses by Difficulty</h2>
               <div class="bar-chart">
                 ${stats.difficultyBreakdown.map(d => `
                   <div class="bar-row">
@@ -123,7 +123,7 @@
 
             <!-- Top courses -->
             <div class="panel panel-full">
-              <h2>&#x1F3C6; Top Rated Courses</h2>
+              <h2> Top Rated Courses</h2>
               ${stats.topCourses.map((c, i) => `
                 <div class="enrollment-item">
                   <div class="enr-info">
@@ -139,14 +139,14 @@
 
             <!-- Export section -->
             <div class="panel panel-full export-section">
-              <h2>&#x1F4E5; Export Data</h2>
+              <h2> Export Data</h2>
               <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:1rem">Download collection data as JSON files</p>
               <div class="export-buttons">
-                <a href="/api/export/users" class="btn btn-primary btn-sm" download>&#x1F464; Users</a>
-                <a href="/api/export/courses" class="btn btn-primary btn-sm" download>&#x1F4DA; Courses</a>
-                <a href="/api/export/lessons" class="btn btn-primary btn-sm" download>&#x1F4D6; Lessons</a>
-                <a href="/api/export/enrollments" class="btn btn-primary btn-sm" download>&#x1F4DD; Enrollments</a>
-                <a href="/api/export/reviews" class="btn btn-primary btn-sm" download>&#x2B50; Reviews</a>
+                <a href="/api/export/users" class="btn btn-primary btn-sm" download> Users</a>
+                <a href="/api/export/courses" class="btn btn-primary btn-sm" download> Courses</a>
+                <a href="/api/export/lessons" class="btn btn-primary btn-sm" download> Lessons</a>
+                <a href="/api/export/enrollments" class="btn btn-primary btn-sm" download> Enrollments</a>
+                <a href="/api/export/reviews" class="btn btn-primary btn-sm" download> Reviews</a>
               </div>
             </div>
           </div>

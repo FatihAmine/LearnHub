@@ -11,10 +11,10 @@
 
   <!-- Navbar -->
   <nav class="navbar">
-    <a href="/" class="logo"><span>&#x1F393;</span> LearnHub</a>
+    <a href="/" class="logo"><span></span> LearnHub</a>
     <div class="search-bar">
       <input type="text" id="searchInput" placeholder="Search courses..." />
-      <button onclick="window.location.href='/?q='+document.getElementById('searchInput').value">&#x1F50D;</button>
+      
     </div>
     <ul class="nav-links">
       <li><a href="/">Catalog</a></li>
@@ -27,19 +27,18 @@
 
   <div class="container">
     <div class="page-header">
-      <h1>&#x1F4CA; User Dashboard</h1>
+      <h1>User Dashboard</h1>
       <p>Track your learning progress</p>
     </div>
 
     <!-- User selector -->
     <div class="user-selector">
-      <label>&#x1F464; Select User:</label>
+      <label> Select User:</label>
       <select id="userSelect" onchange="loadDashboard()"></select>
     </div>
 
     <div id="dashboardContent">
       <div class="empty-state">
-        <div class="icon">&#x1F446;</div>
         <p>Select a user above to view their dashboard</p>
       </div>
     </div>
@@ -97,20 +96,20 @@
           <div class="dashboard-grid">
             <!-- User profile -->
             <div class="panel">
-              <h2>&#x1F464; Profile</h2>
+              <h2> Profile</h2>
               <div style="padding:.5rem 0">
                 <p><strong>${esc(user.firstName)} ${esc(user.lastName)}</strong></p>
                 <p style="color:var(--text-muted);font-size:.85rem">${esc(user.email)}</p>
                 <p style="color:var(--text-muted);font-size:.85rem;margin-top:.5rem">Role: ${user.role}</p>
                 ${user.profile?.bio ? `<p style="margin-top:.75rem;font-size:.85rem">${esc(user.profile.bio)}</p>` : ''}
-                ${user.profile?.city ? `<p style="font-size:.85rem;color:var(--text-muted)">&#x1F4CD; ${esc(user.profile.city)}, ${esc(user.profile.country || '')}</p>` : ''}
+                ${user.profile?.city ? `<p style="font-size:.85rem;color:var(--text-muted)"> ${esc(user.profile.city)}, ${esc(user.profile.country || '')}</p>` : ''}
                 <p style="font-size:.75rem;color:var(--text-muted);margin-top:.75rem">Last login: ${user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'N/A'}</p>
               </div>
             </div>
 
             <!-- Recent reviews -->
             <div class="panel">
-              <h2>&#x2B50; Recent Reviews</h2>
+              <h2> Recent Reviews</h2>
               ${reviews.length === 0
                 ? '<div class="empty-state" style="padding:1rem"><p>No reviews yet</p></div>'
                 : reviews.map(r => `
@@ -128,7 +127,7 @@
 
             <!-- Active enrollments -->
             <div class="panel panel-full">
-              <h2>&#x1F4DA; Active Enrollments (${enrollments.length})</h2>
+              <h2> Active Enrollments (${enrollments.length})</h2>
               ${enrollments.length === 0
                 ? '<div class="empty-state" style="padding:1rem"><p>No active enrollments</p></div>'
                 : enrollments.map(e => `

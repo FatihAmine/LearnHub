@@ -11,10 +11,9 @@
 
   <!-- Navbar -->
   <nav class="navbar">
-    <a href="/" class="logo"><span>&#x1F393;</span> LearnHub</a>
+    <a href="/" class="logo"><span></span> LearnHub</a>
     <div class="search-bar">
       <input type="text" id="searchInput" placeholder="Search courses..." />
-      <button onclick="window.location.href='/?q='+document.getElementById('searchInput').value">&#x1F50D;</button>
     </div>
     <ul class="nav-links">
       <li><a href="/">Catalog</a></li>
@@ -126,14 +125,14 @@
 
               <div class="course-meta-row">
                 <div class="course-meta-item">${renderStars(c.rating?.average || 0)} <strong>${(c.rating?.average || 0).toFixed(1)}</strong> (${c.rating?.count || 0} reviews)</div>
-                <div class="course-meta-item">&#x1F465; <strong>${c.enrollmentCount || 0}</strong> enrolled</div>
-                <div class="course-meta-item">&#x1F4DA; <strong>${c.metadata?.totalLessons || lessons.length}</strong> lessons</div>
-                <div class="course-meta-item">&#x23F1;&#xFE0F; <strong>${c.metadata?.duration ? Math.round(c.metadata.duration / 60) + 'h' : 'N/A'}</strong></div>
+                <div class="course-meta-item"> <strong>${c.enrollmentCount || 0}</strong> enrolled</div>
+                <div class="course-meta-item"> <strong>${c.metadata?.totalLessons || lessons.length}</strong> lessons</div>
+                <div class="course-meta-item"> <strong>${c.metadata?.duration ? Math.round(c.metadata.duration / 60) + 'h' : 'N/A'}</strong></div>
               </div>
 
               <!-- Lessons -->
               <div class="lessons-section">
-                <h2>&#x1F4D6; Course Lessons (${lessons.length})</h2>
+                <h2> Course Lessons (${lessons.length})</h2>
                 ${lessons.length === 0
                   ? '<div class="empty-state"><p>No lessons available yet</p></div>'
                   : lessons.map((l, i) => `
@@ -163,8 +162,8 @@
             <div>
               <div class="sidebar-card">
                 <div class="price-big">$${(c.price || 0).toFixed(2)}</div>
-                <button class="btn btn-primary" onclick="openEnrollForCourse()">&#x1F4DD; Enroll Now</button>
-                <button class="btn btn-secondary" onclick="openReviewForCourse()">&#x270D;&#xFE0F; Write a Review</button>
+                <button class="btn btn-primary" onclick="openEnrollForCourse()"> Enroll Now</button>
+                <button class="btn btn-secondary" onclick="openReviewForCourse()"> Write a Review</button>
                 <ul class="info-list">
                   <li><span>Category</span> <strong>${c.category}</strong></li>
                   <li><span>Difficulty</span> <strong>${c.difficulty}</strong></li>
